@@ -1,0 +1,27 @@
+---
+title: "Stat 4620 Final Project Report"
+subtitle: "Group 7 -- 12:40pm Section"
+author: "Connor McNeill, Ishan Gore, Nate Rezell, Phillip Brown, Vidhya Kewale"
+date: "December 12, 2022"
+output: html_document
+---
+
+# Exploratory Data Analysis
+
+
+# Model Analysis
+
+
+## Motivation
+
+
+## Models Description
+
+
+## Model Assumptions
+
+
+## Model Validation
+
+
+# Results

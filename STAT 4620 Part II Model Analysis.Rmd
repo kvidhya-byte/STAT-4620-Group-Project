@@ -11,9 +11,9 @@ library (pls)
 ```
 
 ``` {r}
-train <- read.csv ("~/Desktop/Ames/train.csv", header = TRUE, row.names = 1, na.strings = ".")
+train <- read.csv ("train.csv", header = TRUE, row.names = 1, na.strings = ".")
 
-test <- read.csv ("~/Desktop/Ames/test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
+test <- read.csv ("test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
 ```
 
 ``` {r}
@@ -565,6 +565,7 @@ lambda.cv = lasso.cv$lambda.min
 
 fit.lasso = glmnet (xTrain, yTrain, alpha = 1, lambda = lambda.cv)
 pred.lasso <- predict (fit.lasso, newx = xTest)
+coef(fit.lasso)
 mean ((yTest - pred.lasso) ^ 2)
 ```
 
