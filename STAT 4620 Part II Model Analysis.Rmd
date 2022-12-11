@@ -1,29 +1,35 @@
 ---
-title: 'STAT 4620 Part II: Model Analysis'
-author: "Phillip Brown (brown.7234)"
+title: "STAT 4620 Final Project"
+author: "Phillip Brown, Ishan Gore, Vidhya Kewale, Connor McNeill, Nate Rezell"
 date: "December 12, 2022"
 output: html_document
 ---
 
-``` {r}
-library (glmnet)
-library (pls)
+``` {r results = "hide"}
+train <- read.csv ("~/Desktop/Ames/train.csv", header = TRUE, row.names = 1, na.strings = ".")
+test <- read.csv ("~/Desktop/Ames/test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
+
+dim (train)
+dim (test)
 ```
 
 ``` {r}
-train <- read.csv ("train.csv", header = TRUE, row.names = 1, na.strings = ".")
+str (train)
+str (test)
+```
 
-test <- read.csv ("test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
+``` {r}
+colSums (train == "NA")
+colSums (test == "NA")
 ```
 
 ``` {r}
 # MSSubClass
-train$MSSubClass <- as.character (train$MSSubClass)
-test$MSSubClass <- as.character (test$MSSubClass)
 MSSubClass <- unique (union (train$MSSubClass, test$MSSubClass))
 train$MSSubClass <- factor (train$MSSubClass, levels = MSSubClass)
 test$MSSubClass <- factor (test$MSSubClass, levels = MSSubClass)
-test <- test [!test$MSSubClass == "150", ]
+
+test <- test [!test$MSSubClass == 150, ]
 ```
 
 ``` {r}
@@ -36,10 +42,10 @@ test$MSZoning <- factor (test$MSZoning, levels = MSZoning)
 ``` {r}
 # LotFrontage
 train$LotFrontage [train$LotFrontage == "NA"] = 0
-train$LotFrontage <- as.numeric (train$LotFrontage)
+train$LotFrontage <- as.integer (train$LotFrontage)
 
 test$LotFrontage [test$LotFrontage == "NA"] = 0
-test$LotFrontage <- as.numeric (test$LotFrontage)
+test$LotFrontage <- as.integer (test$LotFrontage)
 ```
 
 ``` {r}
@@ -48,25 +54,23 @@ test$LotFrontage <- as.numeric (test$LotFrontage)
 
 ``` {r}
 # Street
-train$Street <- factor (train$Street, levels = c ("Grvl", "Pave"), ordered = TRUE)
-
-test$Street <- factor (test$Street, levels = c ("Grvl", "Pave"), ordered = TRUE)
+Street <- unique (union (train$Street, test$Street))
+train$Street <- factor (train$Street, levels = Street)
+test$Street <- factor (test$Street, levels = Street)
 ```
 
 ``` {r}
 # Alley
-train$Alley [train$Alley == "NA"] = "None"
-train$Alley <- factor (train$Alley, levels = c ("None", "Grvl", "Pave"), ordered = TRUE)
-
-test$Alley [test$Alley == "NA"] = "None"
-test$Alley <- factor (test$Alley, levels = c ("None", "Grvl", "Pave"), ordered = TRUE)
+Alley <- unique (union (train$Alley, test$Alley))
+train$Alley <- factor (train$Alley, levels = Alley)
+test$Alley <- factor (test$Alley, levels = Alley)
 ```
 
 ``` {r}
 # LotShape
-train$LotShape <- factor (train$LotShape, levels = c ("IR3", "IR2", "IR1", "Reg"), ordered = TRUE)
-
-test$LotShape <- factor (test$LotShape, levels = c ("IR3", "IR2", "IR1", "Reg"), ordered = TRUE)
+LotShape <- unique (union (train$LotShape, test$LotShape))
+train$LotShape <- factor (train$LotShape, levels = LotShape)
+test$LotShape <- factor (test$LotShape, levels = LotShape)
 ```
 
 ``` {r}
@@ -78,12 +82,11 @@ test$LandContour <- factor (test$LandContour, levels = LandContour)
 
 ``` {r}
 # Utilities
-train$Utilities [train$Utilities == "NA"] = "None"
-train$Utilities <- factor (train$Utilities, levels = c ("None", "ELO", "NoSeWa", "NoSewr", "AllPub"), ordered = TRUE)
+Utilities <- unique (union (train$Utilities, test$Utilities))
+train$Utilities <- factor (train$Utilities, levels = Utilities)
+test$Utilities <- factor (test$Utilities, levels = Utilities)
 
-test$Utilities [test$Utilities == "NA"] = "None"
-test$Utilities <- factor (test$Utilities, levels = c ("None", "ELO", "NoSeWa", "NoSewr", "AllPub"), ordered = TRUE)
-test <- test [!test$Utilities == "None", ]
+test <- test [!test$Utilities == "NA", ]
 ```
 
 ``` {r}
@@ -95,9 +98,9 @@ test$LotConfig <- factor (test$LotConfig, levels = LotConfig)
 
 ``` {r}
 # LandSlope
-train$LandSlope <- factor (train$LandSlope, levels = c ("Sev", "Mod", "Gtl"), ordered = TRUE)
-
-test$LandSlope <- factor (test$LandSlope, levels = c ("Sev", "Mod", "Gtl"), ordered = TRUE)
+LandSlope <- unique (union (train$LandSlope, test$LandSlope))
+train$LandSlope <- factor (train$LandSlope, levels = LandSlope)
+test$LandSlope <- factor (test$LandSlope, levels = LandSlope)
 ```
 
 ``` {r}
@@ -137,10 +140,16 @@ test$HouseStyle <- factor (test$HouseStyle, levels = HouseStyle)
 
 ``` {r}
 # OverallQual
+OverallQual <- unique (union (train$OverallQual, test$OverallQual))
+train$OverallQual <- factor (train$OverallQual, levels = OverallQual)
+test$OverallQual <- factor (test$OverallQual, levels = OverallQual)
 ```
 
 ``` {r}
 # OverallCond
+OverallCond <- unique (union (train$OverallCond, test$OverallCond))
+train$OverallCond <- factor (train$OverallCond, levels = OverallCond)
+test$OverallCond <- factor (test$OverallCond, levels = OverallCond)
 ```
 
 ``` {r}
@@ -181,9 +190,6 @@ test$Exterior2nd <- factor (test$Exterior2nd, levels = Exterior2nd)
 
 ``` {r}
 # MasVnrType
-train$MasVnrType [train$MasVnrType == "NA"] = "None"
-test$MasVnrType [test$MasVnrType == "NA"] = "None"
-
 MasVnrType <- unique (union (train$MasVnrType, test$MasVnrType))
 train$MasVnrType <- factor (train$MasVnrType, levels = MasVnrType)
 test$MasVnrType <- factor (test$MasVnrType, levels = MasVnrType)
@@ -192,24 +198,24 @@ test$MasVnrType <- factor (test$MasVnrType, levels = MasVnrType)
 ``` {r}
 # MasVnrArea
 train$MasVnrArea [train$MasVnrArea == "NA"] = 0
-train$MasVnrArea <- as.numeric (train$MasVnrArea)
+train$MasVnrArea <- as.integer (train$MasVnrArea)
 
 test$MasVnrArea [test$MasVnrArea == "NA"] = 0
-test$MasVnrArea <- as.numeric (test$MasVnrArea)
+test$MasVnrArea <- as.integer (test$MasVnrArea)
 ```
 
 ``` {r}
 # ExterQual
-train$ExterQual <- factor (train$ExterQual, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$ExterQual <- factor (test$ExterQual, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+ExterQual <- unique (union (train$ExterQual, test$ExterQual))
+train$ExterQual <- factor (train$ExterQual, levels = ExterQual)
+test$ExterQual <- factor (test$ExterQual, levels = ExterQual)
 ```
 
 ``` {r}
 # ExterCond
-train$ExterCond <- factor (train$ExterCond, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$ExterCond <- factor (test$ExterCond, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+ExterCond <- unique (union (train$ExterCond, test$ExterCond))
+train$ExterCond <- factor (train$ExterCond, levels = ExterCond)
+test$ExterCond <- factor (test$ExterCond, levels = ExterCond)
 ```
 
 ``` {r}
@@ -221,38 +227,30 @@ test$Foundation <- factor (test$Foundation, levels = Foundation)
 
 ``` {r}
 # BsmtQual
-train$BsmtQual [train$BsmtQual == "NA"] = "None"
-train$BsmtQual <- factor (train$BsmtQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$BsmtQual [test$BsmtQual == "NA"] = "None"
-test$BsmtQual <- factor (test$BsmtQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+BsmtQual <- unique (union (train$BsmtQual, test$BsmtQual))
+train$BsmtQual <- factor (train$BsmtQual, levels = BsmtQual)
+test$BsmtQual <- factor (test$BsmtQual, levels = BsmtQual)
 ```
 
 ``` {r}
 # BsmtCond
-train$BsmtCond [train$BsmtCond == "NA"] = "None"
-train$BsmtCond <- factor (train$BsmtCond, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$BsmtCond [test$BsmtCond == "NA"] = "None"
-test$BsmtCond <- factor (test$BsmtCond, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+BsmtCond <- unique (union (train$BsmtCond, test$BsmtCond))
+train$BsmtCond <- factor (train$BsmtCond, levels = BsmtCond)
+test$BsmtCond <- factor (test$BsmtCond, levels = BsmtCond)
 ```
 
 ``` {r}
 # BsmtExposure
-train$BsmtExposure [train$BsmtExposure == "NA"] = "None"
-train$BsmtExposure <- factor (train$BsmtExposure, levels = c ("None", "No", "Mn", "Av", "Gd"), ordered = TRUE)
-
-test$BsmtExposure [test$BsmtExposure == "NA"] = "None"
-test$BsmtExposure <- factor (test$BsmtExposure, levels = c ("None", "No", "Mn", "Av", "Gd"), ordered = TRUE)
+BsmtExposure <- unique (union (train$BsmtExposure, test$BsmtExposure))
+train$BsmtExposure <- factor (train$BsmtExposure, levels = BsmtExposure)
+test$BsmtExposure <- factor (test$BsmtExposure, levels = BsmtExposure)
 ```
 
 ``` {r}
 # BsmtFinType1
-train$BsmtFinType1 [train$BsmtFinType1 == "NA"] = "None"
-train$BsmtFinType1 <- factor (train$BsmtFinType1, levels = c ("None", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"), ordered = TRUE)
-
-test$BsmtFinType1 [test$BsmtFinType1 == "NA"] = "None"
-test$BsmtFinType1 <- factor (test$BsmtFinType1, levels = c ("None", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"), ordered = TRUE)
+BsmtFinType1 <- unique (union (train$BsmtFinType1, test$BsmtFinType1))
+train$BsmtFinType1 <- factor (train$BsmtFinType1, levels = BsmtFinType1)
+test$BsmtFinType1 <- factor (test$BsmtFinType1, levels = BsmtFinType1)
 ```
 
 ``` {r}
@@ -261,11 +259,9 @@ test$BsmtFinType1 <- factor (test$BsmtFinType1, levels = c ("None", "Unf", "LwQ"
 
 ``` {r}
 # BsmtFinType2
-train$BsmtFinType2 [train$BsmtFinType2 == "NA"] = "None"
-train$BsmtFinType2 <- factor (train$BsmtFinType2, levels = c ("None", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"), ordered = TRUE)
-
-test$BsmtFinType2 [test$BsmtFinType2 == "NA"] = "None"
-test$BsmtFinType2 <- factor (test$BsmtFinType2, levels = c ("None", "Unf", "LwQ", "Rec", "BLQ", "ALQ", "GLQ"), ordered = TRUE)
+BsmtFinType2 <- unique (union (train$BsmtFinType2, test$BsmtFinType2))
+train$BsmtFinType2 <- factor (train$BsmtFinType2, levels = BsmtFinType2)
+test$BsmtFinType2 <- factor (test$BsmtFinType2, levels = BsmtFinType2)
 ```
 
 ``` {r}
@@ -289,33 +285,31 @@ test$Heating <- factor (test$Heating, levels = Heating)
 
 ``` {r}
 # HeatingQC
-train$HeatingQC <- factor (train$HeatingQC, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$HeatingQC <- factor (test$HeatingQC, levels = c ("Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+HeatingQC <- unique (union (train$HeatingQC, test$HeatingQC))
+train$HeatingQC <- factor (train$HeatingQC, levels = HeatingQC)
+test$HeatingQC <- factor (test$HeatingQC, levels = HeatingQC)
 ```
 
 ``` {r}
 # CentralAir
-train$CentralAir <- factor (train$CentralAir, levels = c ("N", "Y"), ordered = TRUE)
-
-test$CentralAir <- factor (test$CentralAir, levels = c ("N", "Y"), ordered = TRUE)
+CentralAir <- unique (union (train$CentralAir, test$CentralAir))
+train$CentralAir <- factor (train$CentralAir, levels = CentralAir)
+test$CentralAir <- factor (test$CentralAir, levels = CentralAir)
 ```
 
 ``` {r}
 # Electrical
-train$Electrical [train$Electrical == "NA"] = "None"
-train$Electrical <- factor (train$Electrical, levels = c ("None", "Mix", "FuseP", "FuseF", "FuseA", "SBrkr"), ordered = TRUE)
-
-test$Electrical [test$Electrical == "NA"] = "None"
-test$Electrical <- factor (test$Electrical, levels = c ("None", "Mix", "FuseP", "FuseF", "FuseA", "SBrkr"), ordered = TRUE)
+Electrical <- unique (union (train$Electrical, test$Electrical))
+train$Electrical <- factor (train$Electrical, levels = Electrical)
+test$Electrical <- factor (test$Electrical, levels = Electrical)
 ```
 
 ``` {r}
-# 1stFlrSF
+# X1stFlrSF
 ```
 
 ``` {r}
-# 2ndFlrSF
+# X2ndFlrSF
 ```
 
 ``` {r}
@@ -329,13 +323,13 @@ test$Electrical <- factor (test$Electrical, levels = c ("None", "Mix", "FuseP", 
 ``` {r}
 # BsmtFullBath
 test$BsmtFullBath [test$BsmtFullBath == "NA"] = 0
-test$BsmtFullBath <- as.numeric (test$BsmtFullBath)
+test$BsmtFullBath <- as.integer (test$BsmtFullBath)
 ```
 
 ``` {r}
 # BsmtHalfBath
 test$BsmtHalfBath [test$BsmtHalfBath == "NA"] = 0
-test$BsmtHalfBath <- as.numeric (test$BsmtHalfBath)
+test$BsmtHalfBath <- as.integer (test$BsmtHalfBath)
 ```
 
 ``` {r}
@@ -356,12 +350,11 @@ test$BsmtHalfBath <- as.numeric (test$BsmtHalfBath)
 
 ``` {r}
 # KitchenQual
-train$KitchenQual [train$KitchenQual == "NA"] = "None"
-train$KitchenQual <- factor (train$KitchenQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+KitchenQual <- unique (union (train$KitchenQual, test$KitchenQual))
+train$KitchenQual <- factor (train$KitchenQual, levels = KitchenQual)
+test$KitchenQual <- factor (test$KitchenQual, levels = KitchenQual)
 
-test$KitchenQual [test$KitchenQual == "NA"] = "None"
-test$KitchenQual <- factor (test$KitchenQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-test <- test [!test$KitchenQual == "None", ]
+test <- test [!test$KitchenQual == "NA", ]
 ```
 
 ``` {r}
@@ -370,12 +363,11 @@ test <- test [!test$KitchenQual == "None", ]
 
 ``` {r}
 # Functional
-train$Functional [train$Functional == "NA"] = "None"
-train$Functional <- factor (train$Functional, levels = c ("None", "Sal", "Sev", "Maj2", "Maj1", "Mod", "Min2", "Min1", "Typ"), ordered = TRUE)
+Functional <- unique (union (train$Functional, test$Functional))
+train$Functional <- factor (train$Functional, levels = Functional)
+test$Functional <- factor (test$Functional, levels = Functional)
 
-test$Functional [test$Functional == "NA"] = "None"
-test$Functional <- factor (test$Functional, levels = c ("None", "Sal", "Sev", "Maj2", "Maj1", "Mod", "Min2", "Min1", "Typ"), ordered = TRUE)
-test <- test [!test$Functional == "None", ]
+test <- test [!test$Functional == "NA", ]
 ```
 
 ``` {r}
@@ -384,18 +376,13 @@ test <- test [!test$Functional == "None", ]
 
 ``` {r}
 # FireplaceQu
-train$FireplaceQu [train$FireplaceQu == "NA"] = "None"
-train$FireplaceQu <- factor (train$FireplaceQu, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$FireplaceQu [test$FireplaceQu == "NA"] = "None"
-test$FireplaceQu <- factor (test$FireplaceQu, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+FireplaceQu <- unique (union (train$FireplaceQu, test$FireplaceQu))
+train$FireplaceQu <- factor (train$FireplaceQu, levels = FireplaceQu)
+test$FireplaceQu <- factor (test$FireplaceQu, levels = FireplaceQu)
 ```
 
 ``` {r}
 # GarageType
-train$GarageType [train$GarageType == "NA"] = "None"
-test$GarageType [test$GarageType == "NA"] = "None"
-
 GarageType <- unique (union (train$GarageType, test$GarageType))
 train$GarageType <- factor (train$GarageType, levels = GarageType)
 test$GarageType <- factor (test$GarageType, levels = GarageType)
@@ -404,19 +391,17 @@ test$GarageType <- factor (test$GarageType, levels = GarageType)
 ``` {r}
 # GarageYrBlt
 train$GarageYrBlt [train$GarageYrBlt == "NA"] = 0
-train$GarageYrBlt <- as.numeric (train$GarageYrBlt)
+train$GarageYrBlt <- as.integer (train$GarageYrBlt)
 
 test$GarageYrBlt [test$GarageYrBlt == "NA"] = 0
-test$GarageYrBlt <- as.numeric (test$GarageYrBlt)
+test$GarageYrBlt <- as.integer (test$GarageYrBlt)
 ```
 
 ``` {r}
 # GarageFinish
-train$GarageFinish [train$GarageFinish == "NA"] = "None"
-train$GarageFinish <- factor (train$GarageFinish, levels = c ("None", "Unf", "RFn", "Fin"), ordered = TRUE)
-
-test$GarageFinish [test$GarageFinish == "NA"] = "None"
-test$GarageFinish <- factor (test$GarageFinish, levels = c ("None", "Unf", "RFn", "Fin"), ordered = TRUE)
+GarageFinish <- unique (union (train$GarageFinish, test$GarageFinish))
+train$GarageFinish <- factor (train$GarageFinish, levels = GarageFinish)
+test$GarageFinish <- factor (test$GarageFinish, levels = GarageFinish)
 ```
 
 ``` {r}
@@ -429,27 +414,23 @@ test$GarageFinish <- factor (test$GarageFinish, levels = c ("None", "Unf", "RFn"
 
 ``` {r}
 # GarageQual
-train$GarageQual [train$GarageQual == "NA"] = "None"
-train$GarageQual <- factor (train$GarageQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$GarageQual [test$GarageQual == "NA"] = "None"
-test$GarageQual <- factor (test$GarageQual, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+GarageQual <- unique (union (train$GarageQual, test$GarageQual))
+train$GarageQual <- factor (train$GarageQual, levels = GarageQual)
+test$GarageQual <- factor (test$GarageQual, levels = GarageQual)
 ```
 
 ``` {r}
 # GarageCond
-train$GarageCond [train$GarageCond == "NA"] = "None"
-train$GarageCond <- factor (train$GarageCond, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$GarageCond [test$GarageCond == "NA"] = "None"
-test$GarageCond <- factor (test$GarageCond, levels = c ("None", "Po", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+GarageCond <- unique (union (train$GarageCond, test$GarageCond))
+train$GarageCond <- factor (train$GarageCond, levels = GarageCond)
+test$GarageCond <- factor (test$GarageCond, levels = GarageCond)
 ```
 
 ``` {r}
 # PavedDrive
-train$PavedDrive <- factor (train$PavedDrive, levels = c ("N", "P", "Y"), ordered = TRUE)
-
-test$PavedDrive <- factor (test$PavedDrive, levels = c ("N", "P", "Y"), ordered = TRUE)
+PavedDrive <- unique (union (train$PavedDrive, test$PavedDrive))
+train$PavedDrive <- factor (train$PavedDrive, levels = PavedDrive)
+test$PavedDrive <- factor (test$PavedDrive, levels = PavedDrive)
 ```
 
 ``` {r}
@@ -465,7 +446,7 @@ test$PavedDrive <- factor (test$PavedDrive, levels = c ("N", "P", "Y"), ordered 
 ```
 
 ``` {r}
-# 3SsnPorch
+# X3SsnPorch
 ```
 
 ``` {r}
@@ -478,27 +459,20 @@ test$PavedDrive <- factor (test$PavedDrive, levels = c ("N", "P", "Y"), ordered 
 
 ``` {r}
 # PoolQC
-train$PoolQC [train$PoolQC == "NA"] = "None"
-train$PoolQC <- factor (train$PoolQC, levels = c ("None", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
-
-test$PoolQC [test$PoolQC == "NA"] = "None"
-test$PoolQC <- factor (test$PoolQC, levels = c ("None", "Fa", "TA", "Gd", "Ex"), ordered = TRUE)
+PoolQC <- unique (union (train$PoolQC, test$PoolQC))
+train$PoolQC <- factor (train$PoolQC, levels = PoolQC)
+test$PoolQC <- factor (test$PoolQC, levels = PoolQC)
 ```
 
 ``` {r}
 # Fence
-train$Fence [train$Fence == "NA"] = "None"
-train$Fence <- factor (train$Fence, levels = c ("None", "MnWw", "GdWo", "MnPrv", "GdPrv"), ordered = TRUE)
-
-test$Fence [test$Fence == "NA"] = "None"
-test$Fence <- factor (test$Fence, levels = c ("None", "MnWw", "GdWo", "MnPrv", "GdPrv"), ordered = TRUE)
+Fence <- unique (union (train$Fence, test$Fence))
+train$Fence <- factor (train$Fence, levels = Fence)
+test$Fence <- factor (test$Fence, levels = Fence)
 ```
 
 ``` {r}
 # MiscFeature
-train$MiscFeature [train$MiscFeature == "NA"] = "None"
-test$MiscFeature [test$MiscFeature == "NA"] = "None"
-
 MiscFeature <- unique (union (train$MiscFeature, test$MiscFeature))
 train$MiscFeature <- factor (train$MiscFeature, levels = MiscFeature)
 test$MiscFeature <- factor (test$MiscFeature, levels = MiscFeature)
@@ -521,6 +495,7 @@ test$MiscFeature <- factor (test$MiscFeature, levels = MiscFeature)
 SaleType <- unique (union (train$SaleType, test$SaleType))
 train$SaleType <- factor (train$SaleType, levels = SaleType)
 test$SaleType <- factor (test$SaleType, levels = SaleType)
+
 test <- test [!test$SaleType == "NA", ]
 ```
 
@@ -529,6 +504,23 @@ test <- test [!test$SaleType == "NA", ]
 SaleCondition <- unique (union (train$SaleCondition, test$SaleCondition))
 train$SaleCondition <- factor (train$SaleCondition, levels = SaleCondition)
 test$SaleCondition <- factor (test$SaleCondition, levels = SaleCondition)
+```
+
+``` {r}
+# SalePrice
+#train$SalePrice = log (train$SalePrice)
+
+#test$SalePrice = log (test$SalePrice)
+```
+
+``` {r results = "hide"}
+str (train)
+str (test)
+```
+
+``` {r}
+library (glmnet)
+library (pls)
 ```
 
 # Linear Model using Least Squares
@@ -565,7 +557,6 @@ lambda.cv = lasso.cv$lambda.min
 
 fit.lasso = glmnet (xTrain, yTrain, alpha = 1, lambda = lambda.cv)
 pred.lasso <- predict (fit.lasso, newx = xTest)
-coef(fit.lasso)
 mean ((yTest - pred.lasso) ^ 2)
 ```
 
@@ -591,4 +582,12 @@ fit.pls2 <- plsr (SalePrice ~ ., data = test, scale = FALSE, ncomp = 29)
 pls.pred <- predict (fit.pls2, ncomp = 29)
 
 mean ((as.vector (pls.pred) - test$SalePrice) ^ 2)
+```
+
+Visualizations for Assumptions of Normality of PLS Model
+``` {r}
+#plot (fit.pls$fitted.values, fit.pls$residuals, xlab = "Fitted Values", ylab = "Residuals", main = "Fitted Values vs. Residuals")
+#abline (h = 0)
+
+#hist (fit.pls$residuals, breaks = 100, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals")
 ```
