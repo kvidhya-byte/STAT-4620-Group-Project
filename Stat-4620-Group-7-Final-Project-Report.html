@@ -365,8 +365,23 @@ Brown, Vidhya Kewale</h4>
 </div>
 
 
+<!-- First, import packages & datasets -->
+<pre class="r"><code># Import Libraries
+library(tidyverse)
+library(pls)
+library(glmnet)
+
+# Import Datasets
+train.imported &lt;- read.csv(&quot;train.csv&quot;, header = TRUE, row.names = 1, na.strings = &quot;.&quot;)
+test.imported &lt;- read.csv(&quot;test_new.csv&quot;,
+header = TRUE, row.names = 1, na.strings = &quot;.&quot;)
+
+# Copy Datasets for Modification</code></pre>
 <div id="exploratory-data-analysis" class="section level1">
 <h1>Exploratory Data Analysis</h1>
+<div id="missing-data" class="section level2">
+<h2>Missing Data</h2>
+</div>
 </div>
 <div id="model-analysis" class="section level1">
 <h1>Model Analysis</h1>

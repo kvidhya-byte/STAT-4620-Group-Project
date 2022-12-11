@@ -6,8 +6,29 @@ date: "December 12, 2022"
 output: html_document
 ---
 
+<!-- First, import packages & datasets -->
+```{r, message=FALSE}
+# Import Libraries
+library(tidyverse)
+library(pls)
+library(glmnet)
+
+# Import Datasets
+train.imported <- read_csv("train.csv")
+test.imported <- read.csv("test_new.csv")
+
+# Copy Datasets for Modification
+train <- train.imported
+test <- test.imported
+```
+
 # Exploratory Data Analysis
 
+## Missing Data
+
+```{r eda_missing}
+
+```
 
 # Model Analysis
 
