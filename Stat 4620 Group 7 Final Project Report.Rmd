@@ -8,28 +8,195 @@ output: html_document
 
 <!-- First, import packages & datasets -->
 ```{r, message=FALSE}
-# Import Libraries
-library(tidyverse)
-library(dplyr)
-library(pls)
-library(glmnet)
-library(rcompanion)
-
+# install the necessary packages
+if (!require("readr"))
+{
+  install.packages("readr")
+  library(readr)
+}
+if (!require("tidyverse"))
+{
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+if (!require("dplyr"))
+{
+  install.packages("dplyr")
+  library(dplyr)
+}
+if (!require("pls"))
+{
+  install.packages("pls")
+  library(pls)
+}
+if (!require("glmnet"))
+{
+  install.packages("glmnet")
+  library(glmnet)
+}
+if (!require("rcompanion"))
+{
+  install.packages("rcompanion")
+  library(rcompanion)
+}
 # Import Datasets
+# Note: might need to change directory depending on where it's stored locally
 train.imported <- read.csv("train.csv")
 test.imported <- read.csv("test_new.csv")
-
-# Copy Datasets for Modification
-train <- train.imported
-test <- test.imported
 ```
 
 # Exploratory Data Analysis
 
-## Missing Data
+## Initial Pre-processing
 
-```{r eda_missing}
+Let's first look at the dimensionality of our dataset:
+```{r}
+# dimension of train / test
+cat("rows x columns of train set: ", dim(train.imported),'\n')
+cat("rows x columns of test set: ", dim(test.imported), '\n')
+# number of numeric variables
+cat("Numer of numeric variables in training set: ", sum(unlist(lapply(train.imported, is.numeric))), '\n')
+cat("Numer of numeric variables in test set: ", sum(unlist(lapply(test.imported, is.numeric))),'\n')
+```
 
+So we see both sets have roughly the same number of observations, and the same number of variables.
+We also see that about half of our variables are numeric, while the other must be factors. So let's separate them momentarily:
+```{r}
+# get columns that are numerics
+train.num.cols <- unlist(lapply(train.imported, is.numeric))
+test.num.cols <- unlist(lapply(test.imported, is.numeric))
+# subset numeric columns in dataset
+train.num <- train.imported[,train.num.cols]
+test.num <- test.imported[,test.num.cols]
+# subset factor columns in dataset
+train.fac <- train.imported[,train.num.cols==F]
+test.fac <- test.imported[,test.num.cols==F]
+```
+
+Upon further analysis of the column description, we note that the 'MSSubClass' variable appears numeric, but the numeric values have no meaning - so let's put that column in the factor variable as well.
+```{r}
+# add MSSubClass as a factor to factor datasets
+train.fac$MSSubClass <- as.factor(train.num$MSSubClass)
+test.fac$MSSubClass <- as.factor(test.num$MSSubClass)
+# delete that column from numeric dataset
+train.num <- train.num[,!(names(train.num) %in% c('MSSubClass'))]
+test.num <- test.num[,!(names(test.num) %in% c('MSSubClass'))]
+```
+
+
+Let's now look at all the N/A values in the dataset:
+```{r}
+# get number of N/A in datasets
+cat("Number of N/A values in train.num: ", length(which(is.na(train.num), arr.ind=TRUE)),'\n')
+cat("Number of N/A values in train.fac: ", length(which(is.na(train.fac), arr.ind=TRUE)),'\n')
+cat("Number of N/A values in test.num: ", length(which(is.na(test.num), arr.ind=TRUE)),'\n')
+cat("Number of N/A values in test.fac: ", length(which(is.na(test.fac), arr.ind=TRUE)),'\n')
+```
+Let's look at which columns have N/A values:
+```{r}
+# get and print column names with N/A values for all datasets
+na.train.num <- which(is.na(train.num), arr.ind=TRUE)
+cat("Columns with N/A values for train.num: ", colnames(train.num)[unique(na.train.num[,2])], '\n\n')
+na.train.fac <- which(is.na(train.fac), arr.ind=TRUE)
+cat("Columns with N/A values for train.fac: ", colnames(train.fac)[unique(na.train.fac[,2])], '\n\n')
+na.test.num <- which(is.na(test.num), arr.ind=TRUE)
+cat("Columns with N/A values for test.num: ", colnames(test.num)[unique(na.test.num[,2])], '\n\n')
+na.test.fac <- which(is.na(test.fac), arr.ind=TRUE)
+cat("Columns with N/A values for test.fac: ", colnames(test.fac)[unique(na.test.fac[,2])], '\n\n')
+```
+
+Let's look at how to deal with these values separately:
+For the numeric values, after looking through the variable description, we concluded it makes the most sense to make the N/A values for LotFrontage and MasVnrArea equal to 0, and turn GarageYrBlt into a factor, with N/A being it's own level, since we have no information on why those values are null.
+```{r}
+# Set N/A LotFrontage values to 0
+train.num[is.na(train.num$LotFrontage),]$LotFrontage = 0
+test.num[is.na(test.num$LotFrontage),]$LotFrontage = 0
+# Set N/A MasVnrArea values to 0
+train.num[is.na(train.num$MasVnrArea),]$MasVnrArea = 0
+test.num[is.na(test.num$MasVnrArea),]$MasVnrArea = 0
+# Set BsmtFullBath and BsmtHalfBath NAs to 0 for test set (train set has no NAs)
+test.num[is.na(test.num$BsmtHalfBath),]$BsmtHalfBath = 0
+test.num[is.na(test.num$BsmtFullBath),]$BsmtFullBath = 0
+
+# turn GarageYrBlt into a factor, and move it to factor dataset
+train.fac$GarageYrBlt <- cut(train.num$GarageYrBlt,
+                       breaks=c(1900, 1961, 1978, 2002, 2010),
+                       labels=c('1900-1961', '1961-1978', '1978-2002', '2002-2010'))
+train.fac$GarageYrBlt <- addNA(train.fac$GarageYrBlt) 
+
+test.fac$GarageYrBlt <- cut(test.num$GarageYrBlt,
+                       breaks=c(1900, 1961, 1978, 2002, 2010),
+                       labels=c('1900-1961', '1961-1978', '1978-2002', '2002-2010'))
+test.fac$GarageYrBlt <- addNA(test.fac$GarageYrBlt)
+
+# delete it from num dataset
+train.num <- train.num[,!(names(train.num) %in% c('GarageYrBlt'))]
+test.num <- test.num[,!(names(test.num) %in% c('GarageYrBlt'))]
+```
+
+Now for the factor variables, after looking through the variable descriptions, we decided it makes the most sense to simply set those values to 'None'
+```{r}
+# turn NA values to 'None'
+train.fac[is.na(train.fac)] = 'None'
+test.fac[is.na(test.fac)] = 'None'
+# force train.fac back into a dataframe object
+train.fac <- as.data.frame(unclass(train.fac),stringsAsFactors=TRUE)
+test.fac <- as.data.frame(unclass(test.fac),stringsAsFactors=TRUE)
+
+# let's force the training and test factors to be the same
+for (col in colnames(test.fac)){
+  if (length(attributes(train.fac[[col]])$levels) < length(attributes(test.fac[[col]])$levels)) {
+    attributes(train.fac[[col]]) <- attributes(test.fac[[col]]) 
+  } else {
+    attributes(test.fac[[col]]) <- attributes(train.fac[[col]]) 
+  }
+}
+```
+
+Now that we finally have cleaned the data, let's concatenate all the variables back into one dataset, and let's print the dimensions again so we can confirm we haven't lost any information:
+```{r}
+# concatenate variables
+train <- cbind(train.num, train.fac)
+test <- cbind(test.num, test.fac)
+# dimension of train / test
+cat("rows x columns of train set: ", dim(train),'\n')
+cat("rows x columns of test set: ", dim(test), '\n')
+```
+
+## Data Exploration
+
+Now, with our dataset, let's first look at the variable we are trying to predict: SalesPrice
+```{r}
+hist(train$SalePrice, main = 'Histogram of Sales Price - training set', xlab = 'SalesPrice')
+summary(train$SalePrice)
+```
+
+We first see that our distribution of SalesPrice is skewed, and doing a log transformation may actually make it look like a Normal distribution. This however isn't always necessary, because there is no need for SalesPrice to be Normally Distributed - let's delve further however.
+
+Let's look at the pairs plots of the numeric variables that are most correlated with SalesPrice:
+```{r}
+# get correlation matrix
+cor.math = cor(train.num)
+# print indices where absolute correlation is greater than 0.5
+which(cor.math > 0.5 | cor.math < -0.5, arr.ind=TRUE)
+```
+
+From this chart, we see that OverallQual, YearBuilt, YearRemodAdd, TotalBsmtSF, 1stFlrSF, GrLivArea, FullBath, TotRmsAbvGrd, GarageCars, GarageArea all seem to be correlated. So let's look at their pair plots, and also the same plot with SalesPrice on log-scale:
+```{r}
+# pairs plot with original SalesPrice
+pairs(train.num[,c(4,6,7,12,13,16,19,23,25,26,36)])
+# pairs plot with log SalesPrice
+pairs(cbind(train.num[,c(4,6,7,12,13,16,19,23,25,26)], log(train.num$SalePrice)))
+```
+
+Off of the pairs plot, we see that the variables look to be more linearly correlated to Log(SalesPrice) than just SalesPrice. Because of this, let's log-transform SalesPrice:
+```{r}
+# log-transform SalesPrice
+train$log.SalePrice = log(train$SalePrice)
+test$log.SalePrice = log(test$SalePrice)
+# delete SalePrice
+train <- train[,!(names(train) %in% c('SalePrice'))]
+test <- test[,!(names(test) %in% c('SalePrice'))]
 ```
 
 # Model Analysis
@@ -52,7 +219,6 @@ In the histogram shown below, the distribution of the residuals look to be appro
 ``` {r, echo=FALSE}
 # Histogram of Residuals
 # hist(fit.pls2$residuals, breaks = 100, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals", col="dark red", xlim=c(-2e+05, 2e+05))
-
 plotNormalHistogram(fit.pls2$residuals, prob = FALSE, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals", col="dark red", xlim=c(-2e+05, 2e+05), breaks=100)
 ```
 
