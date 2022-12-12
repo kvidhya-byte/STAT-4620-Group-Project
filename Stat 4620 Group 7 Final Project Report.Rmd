@@ -41,8 +41,18 @@ test <- test.imported
 
 ## Model Assumptions
 
+Initially, we must of course assume the observations are independent of each other. Next, the model chosen must be classified as supervised or unsupervised. Our chosen model (partial least squares) is a supervised learning method, which means that the technique is utilized with full knowledge of the response variable (y-values/SalePrice). This model gives the advantage of dealing with any multicollinearity interference, any type of variable (continuous/nominal/ordinal), in addition to some potentially troublesome missing values or noise within the data set. Since the covariates are being regressed upon the actual observed y-value, there aren’t any assumptions made about the true function. While this is the case, PLS must still undergo the usual residual testing to conclude normality or non-normality, while also confirming it is not overfitting.
 
 ## Model Validation
+
+Cross-validation was done to determine the optimal number of components and was checked, and with a selection of 29 out of ~300 components, it was determined to be a sound fit. The next step includes multiple analysis of the fit’s residuals. 
+In the histogram shown below, the distribution of the residuals look to be approximately normal. 
+
+To support this, the qq plot below displays a fairly normal distribution with slightly heavy tails. 
+
+Lastly for the residual analysis, taking a look at the variance of the plot below, we see that there is a consistent variation among the residuals when plotting them against the fitted values. 
+
+Finally, while choosing the PLS model, it must be shown that its test MSE is a plausible value when compared to the data set and other model fits (ridge, LASSO, PCA). With PLS’s MSE of 436,285,791, this is the best error, with the next best being PCA’s test MSE of 447,323,797. Comparing the previous two MSEs with ridge and LASSO’s MSEs of 658,411,884 and 679,691,337 respectively, this shows overall consistency for the data and further supports the choice of PLS to be the best validated model in this setting. The chosen PLS model is now validated and can provide fair and confident insights into the data set.
 
 
 # Results
