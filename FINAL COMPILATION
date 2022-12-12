@@ -13,8 +13,8 @@ Before we begin forming predictive models for the response variable, "SalePrice"
 
 ### Data Cleaning
 ``` {r results = "hide"}
-train <- read.csv ("~/Desktop/Ames/train.csv", header = TRUE, row.names = 1, na.strings = ".")
-test <- read.csv ("~/Desktop/Ames/test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
+train <- read.csv ("train.csv", header = TRUE, row.names = 1, na.strings = ".")
+test <- read.csv ("test_new.csv", header = TRUE, row.names = 1, na.strings = ".")
 ```
 
 ``` {r}
