@@ -10,11 +10,13 @@ output: html_document
 ```{r, message=FALSE}
 # Import Libraries
 library(tidyverse)
+library(dplyr)
 library(pls)
 library(glmnet)
+library(rcompanion)
 
 # Import Datasets
-train.imported <- read_csv("train.csv")
+train.imported <- read.csv("train.csv")
 test.imported <- read.csv("test_new.csv")
 
 # Copy Datasets for Modification
@@ -49,14 +51,16 @@ Cross-validation was done to determine the optimal number of components and was 
 In the histogram shown below, the distribution of the residuals look to be approximately normal. 
 ``` {r, echo=FALSE}
 # Histogram of Residuals
-hist(fit.pls2$residuals, breaks = 100, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals", col="dark red", xlim=c(-2e+05, 2e+05))
+# hist(fit.pls2$residuals, breaks = 100, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals", col="dark red", xlim=c(-2e+05, 2e+05))
+
+plotNormalHistogram(fit.pls2$residuals, prob = FALSE, xlab = "Residuals", ylab = "Count", main = "Histogram of Residuals", col="dark red", xlim=c(-2e+05, 2e+05), breaks=100)
 ```
 
 To support this, the qq plot below displays a fairly normal distribution with slightly heavy tails. 
 ``` {r, echo=FALSE}
 # QQ Plot
 qqnorm(fit.pls2$residuals, col = "dark orange")
-qqline(fit.pls2$residuals, col = "dark grey")
+qqline(fit.pls2$residuals, col = "black")
 ```
 
 Lastly for the residual analysis, taking a look at the variance of the plot below, we see that there is a consistent variation among the residuals when plotting them against the fitted values. 
